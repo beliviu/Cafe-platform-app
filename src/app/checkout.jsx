@@ -39,7 +39,7 @@ function pickupSlots(hours, dayOffset) {
 export default function CheckoutScreen() {
   const styles = useStyles()
   const { COLORS } = useTheme()
-  const { session, supabase } = useAuth()
+  const { session, supabase, isGuest, signInGuest } = useAuth()
   const { cafe, brand } = useBrand()
   const { toast } = useToast()
   const { items, cafeId, subtotal, clearCart, table, setTable } = useCart()
@@ -52,6 +52,7 @@ export default function CheckoutScreen() {
   const [slot, setSlot] = useState(null)
   const [paymentMethod, setPaymentMethod] = useState('cash')
   const [notes, setNotes] = useState('')
+  const [guestName, setGuestName] = useState(null)
   const [voucherInput, setVoucherInput] = useState('')
   const [voucher, setVoucher] = useState(null)
   const [voucherError, setVoucherError] = useState('')
@@ -77,12 +78,15 @@ export default function CheckoutScreen() {
   }, [cafeId, supabase])
 
   useEffect(() => {
-    if (!supabase || !session || !cafeId || !live) return
+    if (!supabase || !session || isGuest || !cafeId || !live) return
     supabase.rpc('loyalty_me', { p_cafe_id: cafeId }).then(({ data }) => setLoyalty(data?.enabled ? data : null))
-  }, [cafeId, live, session, supabase])
+  }, [cafeId, isGuest, live, session, supabase])
 
+  // QR meja: boleh pesan sebagai tamu tanpa login. Selain meja (bawa pulang/terjadwal) wajib akun.
+  const guestMode = Boolean(table) && (!session || isGuest)
+  const needsLogin = !table && (!session || isGuest)
   const closedNow = status && !status.accepting
-  const canSchedule = live && status?.scheduled_enabled && !table
+  const canSchedule = live && status?.scheduled_enabled && !table && !isGuest
   const scheduling = canSchedule && (when === 'later' || (closedNow && !status.paused))
   const slots = useMemo(() => (scheduling ? pickupSlots(cafe?.opening_hours, day) : []), [cafe?.opening_hours, day, scheduling])
   const voucherDiscount = voucher ? Math.min(voucher.discount, subtotal) : 0
@@ -96,9 +100,39 @@ export default function CheckoutScreen() {
   const charges = computeCharges(Math.max(subtotal - voucherDiscount - pointsDiscount, 0), settings)
   const orderTypes = (settings?.order_types?.length ? settings.order_types : ['takeaway', 'dine_in']).filter((type) => ['takeaway', 'dine_in'].includes(type))
 
+  const savedGuestName = typeof session?.user?.user_metadata?.full_name === 'string'
+    ? session.user.user_metadata.full_name
+    : ''
+  const guestNameValue = guestName ?? savedGuestName
+
+  /** Tamu QR meja memakai sesi anonim; namanya disimpan di profil agar terlihat oleh kafe. */
+  async function ensureSession() {
+    if (!table || (session && !isGuest)) return true
+    const name = guestNameValue.trim()
+    if (!name) throw new Error('Nama wajib diisi sebelum membuat pesanan.')
+    if (!session) {
+      await signInGuest(name)
+      return true
+    }
+
+    const savedName = typeof session.user.user_metadata?.full_name === 'string'
+      ? session.user.user_metadata.full_name.trim()
+      : ''
+    if (savedName !== name) {
+      const { error: metadataError } = await supabase.auth.updateUser({ data: { full_name: name } })
+      if (metadataError) throw new Error(`Nama tamu gagal disimpan: ${metadataError.message}`)
+      const { data, error: profileError } = await supabase.from('profiles')
+        .update({ full_name: name }).eq('id', session.user.id).select('id').maybeSingle()
+      if (profileError) throw new Error(`Nama tamu gagal disimpan: ${profileError.message}`)
+      if (!data) throw new Error('Nama tamu tidak berhasil disimpan. Coba lagi.')
+    }
+    return true
+  }
+
   async function applyVoucher() {
     const code = voucherInput.trim().toUpperCase()
     if (!code) return
+    if (!session || isGuest) return setVoucherError('Masuk ke akun untuk memakai voucher.')
     setCheckingVoucher(true)
     setVoucherError('')
     const { data, error: rpcError } = await supabase.rpc('voucher_check', { p_cafe_id: cafeId, p_code: code, p_subtotal: subtotal })
@@ -112,13 +146,20 @@ export default function CheckoutScreen() {
 
   async function placeOrder() {
     setError('')
-    if (!session) {
+    if (needsLogin) {
       router.push({ pathname: '/login', params: { returnTo: '/checkout' } })
       return
     }
+    if (guestMode && !guestNameValue.trim()) return setError('Nama wajib diisi sebelum membuat pesanan.')
     if (!items.length || !cafeId) return setError('Keranjang kosong. Tambahkan menu sebelum checkout.')
     if (scheduling && !slot) return setError('Pilih jam ambil pesanan.')
     setLoading(true)
+    try {
+      await ensureSession()
+    } catch (caught) {
+      setLoading(false)
+      return setError(caught.message)
+    }
     const payload = items.map((item) => ({ product_id: item.product_id, quantity: item.quantity, option_ids: item.option_ids, ...(item.notes ? { notes: item.notes } : {}) }))
     let result = await rpc(supabase, 'customer_place_order', {
       p_cafe_id: cafeId, p_items: payload, p_order_type: table ? 'dine_in' : orderType, p_table_token: table?.token || null,
@@ -151,7 +192,8 @@ export default function CheckoutScreen() {
   const blocked = Boolean(status?.paused) || (closedNow && !canSchedule)
   return (
     <Screen>
-      {!session && <View style={styles.notice}><Text size="sm" style={{ color: brand.colors.primaryPressed }}>Masuk atau buat akun dulu sebelum memesan.</Text></View>}
+      {needsLogin && <View style={styles.notice}><Text size="sm" style={{ color: brand.colors.primaryPressed }}>{isGuest ? 'Pesan bawa pulang perlu akun. Masuk atau daftar dulu — pesan dari meja tetap bisa tanpa login.' : 'Masuk atau buat akun dulu sebelum memesan.'}</Text></View>}
+      {guestMode && <View style={styles.notice}><Text size="sm" style={{ color: brand.colors.primaryPressed }}>Pesan dari meja tanpa login. Simpan halaman ini untuk melihat status & e-struk pesananmu.</Text></View>}
       <TableBanner table={table} onClear={() => setTable(null)} />
       {status ? <CafeStatusPill status={status} /> : null}
       {error ? <ErrorBox message={error} /> : null}
@@ -205,7 +247,7 @@ export default function CheckoutScreen() {
             </View>
           )}
 
-          {live && (
+          {live && !guestMode && (
             <View style={styles.section}>
               <Text weight="700">Voucher</Text>
               {voucher ? (
@@ -249,6 +291,9 @@ export default function CheckoutScreen() {
               </Pressable>
             ))}
           </View>
+          {guestMode ? (
+            <Field label="Nama kamu (wajib)" value={guestNameValue} onChangeText={setGuestName} placeholder="Nama yang akan dipanggil kafe" maxLength={60} />
+          ) : null}
           <Field label="Catatan untuk kafe (opsional)" value={notes} onChangeText={setNotes} placeholder="Contoh: tolong pisah sedotan" multiline maxLength={1000} />
 
           <View style={styles.card}>
@@ -264,8 +309,8 @@ export default function CheckoutScreen() {
           </View>
 
           <Button
-            title={!session ? 'Masuk untuk memesan' : blocked ? (status?.paused ? 'Pesanan sedang dijeda' : 'Kafe sedang tutup') : scheduling ? 'Jadwalkan pesanan' : method === 'qris' ? 'Pesan & bayar QRIS' : 'Buat pesanan'}
-            onPress={placeOrder} loading={loading} disabled={Boolean(session) && blocked}
+            title={needsLogin ? 'Masuk untuk memesan' : blocked ? (status?.paused ? 'Pesanan sedang dijeda' : 'Kafe sedang tutup') : scheduling ? 'Jadwalkan pesanan' : method === 'qris' ? 'Pesan & bayar QRIS' : 'Buat pesanan'}
+            onPress={placeOrder} loading={loading} disabled={!needsLogin && blocked}
           />
         </>
       )}

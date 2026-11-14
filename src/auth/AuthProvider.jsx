@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppState } from 'react-native'
 import { AuthContext } from './AuthContext.js'
 import { supabase, supabaseConfigError } from '../lib/supabase.js'
@@ -37,6 +37,17 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const value = useMemo(() => ({ error, loading, session, supabase }), [error, loading, session])
+  // Sesi tamu (Supabase Anonymous Sign-in) untuk pesan lewat QR meja tanpa login — file 13
+  const signInGuest = useCallback(async (fullName) => {
+    const { data, error: guestError } = await supabase.auth.signInAnonymously({ options: { data: fullName ? { full_name: fullName } : {} } })
+    if (guestError) {
+      const disabled = /anonymous.*disabled|not enabled/i.test(guestError.message)
+      throw new Error(disabled ? 'Pesan tanpa login belum diaktifkan kafe. Silakan masuk atau daftar dulu.' : `Gagal memulai sesi tamu: ${guestError.message}`)
+    }
+    return data.session
+  }, [])
+  const isGuest = Boolean(session?.user?.is_anonymous)
+
+  const value = useMemo(() => ({ error, loading, session, supabase, isGuest, signInGuest }), [error, loading, session, isGuest, signInGuest])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

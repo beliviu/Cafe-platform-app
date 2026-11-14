@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { router, useLocalSearchParams } from 'expo-router'
 import { StyleSheet, TextInput, View } from 'react-native'
-import { CalendarClock, Check, Clock3, LifeBuoy, MapPin, QrCode, RotateCcw, XCircle } from 'lucide-react-native'
+import { CalendarClock, Check, Clock3, LifeBuoy, MapPin, QrCode, Receipt, RotateCcw, XCircle } from 'lucide-react-native'
 import { useAuth } from '../../auth/useAuth.js'
 import { useBrand } from '../../brand/useBrand.js'
 import { useCart } from '../../cart/useCart.js'
@@ -222,6 +222,7 @@ export default function OrderTrackingScreen() {
         {staticQris && order.payment_method === 'qris' && active && order.payment_status !== 'paid' ? (
           <Button title="Bayar dengan QRIS" icon={QrCode} onPress={() => router.push(`/payment/${order.id}`)} />
         ) : null}
+        {!cancelled ? <Button title="Lihat e-struk" variant="secondary" icon={Receipt} onPress={() => router.push(`/receipt/${order.id}`)} /> : null}
         {canCancel ? <Button title="Batalkan pesanan" variant="danger-soft" icon={XCircle} onPress={() => setDialog('cancel')} /> : null}
         {!active && reviews !== null ? <Button title="Pesan lagi" icon={RotateCcw} loading={reordering} onPress={() => (cartItems.length ? setDialog('reorder') : reorder(order))} /> : null}
         {reviews !== null ? <Button title="Butuh bantuan?" variant="secondary" icon={LifeBuoy} onPress={() => router.push({ pathname: '/support/new', params: { orderId: order.id, ref: formatQueueNumber(order) } })} /> : null}

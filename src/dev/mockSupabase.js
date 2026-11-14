@@ -4,6 +4,8 @@
  * Kendali QA (web): window.__customerMock.setStatus(orderId, 'ready') · .pause(true) · .closeNow(true)
  */
 // QA: ?qris=statis → gateway mati & QRIS statis kafe terpasang
+// QA: ?guest=1 → mulai tanpa login (uji pesan tamu lewat QR meja)
+const GUEST_DEMO = typeof window !== 'undefined' && /guest=1/.test(window.location?.search || '')
 const STATIC_QRIS_DEMO = typeof window !== 'undefined' && /qris=statis/.test(window.location?.search || '')
 const DEMO_QRIS_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="400"><rect width="300" height="400" fill="#fff"/><text x="150" y="40" font-size="22" text-anchor="middle" font-family="Arial" font-weight="bold">QRIS</text><rect x="50" y="80" width="200" height="200" fill="none" stroke="#000" stroke-width="10"/><rect x="90" y="120" width="40" height="40"/><rect x="170" y="120" width="40" height="40"/><rect x="90" y="200" width="40" height="40"/><rect x="150" y="180" width="20" height="60"/><text x="150" y="330" font-size="16" text-anchor="middle" font-family="Arial">KOPI SENJA (DEMO)</text></svg>')}`
 const CAFE_ID = 'cafe-1'
@@ -272,7 +274,7 @@ function rpcs(db, state) {
 export function createMockSupabase() {
   const db = fixtures()
   const state = { closed: false }
-  let session = { user: { id: USER_ID, email: 'rani@contoh.id' }, access_token: 'mock' }
+  let session = GUEST_DEMO ? null : { user: { id: USER_ID, email: 'rani@contoh.id' }, access_token: 'mock' }
   const authListeners = new Set()
   const channels = new Set()
   const emit = (event) => authListeners.forEach((cb) => cb(event, session))
@@ -348,6 +350,7 @@ export function createMockSupabase() {
       signInWithPassword: async ({ email }) => { await wait(); session = { user: { id: USER_ID, email }, access_token: 'mock' }; emit('SIGNED_IN'); return { data: { session }, error: null } },
       signUp: async ({ email }) => { await wait(); session = { user: { id: USER_ID, email }, access_token: 'mock' }; emit('SIGNED_IN'); return { data: { session, user: session.user }, error: null } },
       signOut: async () => { session = null; emit('SIGNED_OUT'); return { error: null } },
+      signInAnonymously: async () => { await wait(); session = { user: { id: USER_ID, email: null, is_anonymous: true }, access_token: 'mock' }; emit('SIGNED_IN'); return { data: { session }, error: null } },
       resetPasswordForEmail: async () => { await wait(); return { data: {}, error: null } },
       updateUser: async () => { await wait(); return { data: { user: session?.user }, error: null } },
       setSession: async () => ({ data: { session }, error: null }),

@@ -65,6 +65,7 @@ function ThemedStack() {
         <Stack.Screen name="checkout" options={{ title: 'Checkout' }} />
         <Stack.Screen name="payment/[id]" options={{ title: 'Pembayaran' }} />
         <Stack.Screen name="order/[id]" options={{ title: 'Status pesanan' }} />
+        <Stack.Screen name="receipt/[id]" options={{ title: 'E-struk' }} />
         <Stack.Screen name="meja/[token]" options={{ title: 'QR meja' }} />
         <Stack.Screen name="forgot-password" options={{ title: 'Lupa password' }} />
         <Stack.Screen name="reset-password" options={{ title: 'Password baru' }} />

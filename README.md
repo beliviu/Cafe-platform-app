@@ -31,6 +31,12 @@ workflow migrations; it enables customer profile-name updates and a
 customer-owned simulated-payment log. Simulations stay `pending` and are
 excluded from paid-revenue reports.
 
+Guest QR-table ordering also requires the customer QR SQL setup and
+`13-tamu-qr-meja.sql` from the Cafe-platform repository, plus **Allow anonymous
+sign-ins** enabled in Supabase Auth. Apply the QR customer setup before the
+guest-order SQL. Guests must provide a name and can only order at a table;
+vouchers, points, and takeaway orders require a customer account.
+
 The payment simulation is a demo only. It does not connect to a payment
 processor or move money. Production payments require a trusted server-side
 provider integration and verified webhooks.
@@ -38,6 +44,7 @@ provider integration and verified webhooks.
 ## Customer app
 
 - Browse cafe information and available products without signing in.
+- Order without an account by scanning a table QR code and entering a name. Guest orders are limited to dine-in; vouchers, points, and takeaway orders require an account.
 - View cafe-managed promotional banners on the home screen and open their
   product, category, voucher, or internal destinations. Banner images and
   schedules require the `20261109070000_create_promotional_banners.sql`

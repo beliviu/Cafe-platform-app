@@ -28,7 +28,7 @@ function AppearanceCard() {
 
 export default function ProfileScreen() {
   const styles = useStyles()
-  const { session, supabase } = useAuth()
+  const { session, supabase, isGuest } = useAuth()
   const { cafe, brand } = useBrand()
   const { status } = useCafeStatus(cafe)
   const notifications = useNotifications({ limit: 30 })
@@ -81,7 +81,14 @@ export default function ProfileScreen() {
         <Text size="xs" weight="800" style={[styles.eyebrow, { color: brand.colors.primaryPressed }]}>AKUN CUSTOMER</Text>
         <Text serif weight="700" size="3xl">Profil saya</Text>
       </View>
-      {!session ? (
+      {isGuest ? (
+        <View style={styles.card}>
+          <Text weight="700">Kamu memesan sebagai tamu</Text>
+          <Text size="sm" tone="muted">Pesanan dari meja tetap bisa dilihat di tab Pesanan selama memakai browser/HP ini. Buat akun untuk mengumpulkan poin, voucher, dan pesan bawa pulang.</Text>
+          <Text size="xs" tone="muted">Catatan: setelah masuk ke akun, pesanan tamu sebelumnya tidak ikut pindah.</Text>
+          <Button title="Masuk atau daftar" onPress={() => router.push('/login')} />
+        </View>
+      ) : !session ? (
         <EmptyState title="Selamat datang" description="Masuk atau buat akun untuk menyimpan pesanan, mengumpulkan poin, dan melihat statusnya."
           action={<Button title="Masuk atau daftar" onPress={() => router.push('/login')} />} />
       ) : loading ? <LoadingState label="Memuat profil..." /> : (
@@ -108,7 +115,7 @@ export default function ProfileScreen() {
           <Button title="Keluar dari akun" onPress={signOut} variant="quiet" />
         </>
       )}
-      {!session ? <AppearanceCard /> : null}
+      {!session || isGuest ? <AppearanceCard /> : null}
     </Screen>
   )
 }
