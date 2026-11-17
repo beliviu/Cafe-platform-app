@@ -98,6 +98,40 @@ export default function CheckoutScreen() {
   }, [loyalty, subtotal, voucherDiscount])
   const pointsDiscount = usePoints && pointsInfo ? pointsInfo.value : 0
   const charges = computeCharges(Math.max(subtotal - voucherDiscount - pointsDiscount, 0), settings)
+  const payload = useMemo(() => items.map((item) => ({ product_id: item.product_id, quantity: item.quantity, option_ids: item.option_ids, ...(item.notes ? { notes: item.notes } : {}) })), [items])
+
+  // Rincian harga dari database (file 21): angka sama persis dengan setelah pesan — harga menu terbaru, varian,
+  // voucher, poin, service, pajak, pembulatan. Sebelum file 21 dijalankan → perkiraan lokal di atas.
+  const quoteKey = JSON.stringify([cafeId, payload, voucher?.code || null, pointsDiscount ? pointsInfo.points : 0, session?.user?.id || null])
+  const [quote, setQuote] = useState(null)
+  useEffect(() => {
+    if (!supabase || !cafeId || !payload.length) return undefined
+    let active = true
+    const timer = setTimeout(async () => {
+      const result = await rpc(supabase, 'customer_quote_order', {
+        p_cafe_id: cafeId, p_items: payload, p_voucher_code: voucher?.code || null, p_redeem_points: pointsDiscount ? pointsInfo.points : 0,
+      })
+      if (active) setQuote(result.error ? null : { key: quoteKey, data: result.data })
+    }, 350)
+    return () => { active = false; clearTimeout(timer) }
+  }, [cafeId, payload, pointsDiscount, pointsInfo, quoteKey, supabase, voucher?.code])
+  const q = quote?.data || null
+  const quoteUpdating = Boolean(quote) && quote.key !== quoteKey
+  const priced = q ? {
+    subtotal: Number(q.subtotal), voucher: q.voucher?.ok ? Number(q.voucher.discount) : 0, points: Number(q.points_discount), pointsCount: q.points,
+    service: Number(q.service), serviceRate: Number(q.service_rate), tax: Number(q.tax), taxRate: Number(q.tax_rate), taxInclusive: q.tax_inclusive,
+    rounding: Number(q.rounding), total: Number(q.total),
+  } : {
+    subtotal, voucher: voucherDiscount, points: pointsDiscount, pointsCount: pointsInfo?.points || 0,
+    service: charges.service, serviceRate: charges.serviceRate, tax: charges.tax, taxRate: charges.taxRate, taxInclusive: charges.taxInclusive,
+    rounding: charges.rounding, total: charges.total,
+  }
+  const lineTotal = (index, item) => {
+    const line = q?.lines?.find((entry) => entry.index === index)
+    return line ? Number(line.line_total) : item.unit_price * item.quantity
+  }
+  const priceChanged = Boolean(q?.lines?.some((line) => Number(line.unit_price) !== Number(items[line.index]?.unit_price)))
+  const quoteProblems = q?.problems || []
   const orderTypes = (settings?.order_types?.length ? settings.order_types : ['takeaway', 'dine_in']).filter((type) => ['takeaway', 'dine_in'].includes(type))
 
   const savedGuestName = typeof session?.user?.user_metadata?.full_name === 'string'
@@ -160,7 +194,6 @@ export default function CheckoutScreen() {
       setLoading(false)
       return setError(caught.message)
     }
-    const payload = items.map((item) => ({ product_id: item.product_id, quantity: item.quantity, option_ids: item.option_ids, ...(item.notes ? { notes: item.notes } : {}) }))
     let result = await rpc(supabase, 'customer_place_order', {
       p_cafe_id: cafeId, p_items: payload, p_order_type: table ? 'dine_in' : orderType, p_table_token: table?.token || null,
       p_notes: notes.trim() || null, p_payment_method: method === 'qris' ? null : method, p_idempotency_key: orderKey,
@@ -202,13 +235,13 @@ export default function CheckoutScreen() {
       {!items.length ? <Text tone="muted">Tambahkan menu ke keranjang terlebih dahulu.</Text> : (
         <>
           <View style={styles.card}>
-            {items.map((item) => (
+            {items.map((item, index) => (
               <View key={item.key} style={styles.line}>
                 <View style={styles.lineText}>
                   <Text size="sm">{item.quantity} × {item.name}</Text>
                   {item.options?.length ? <Text size="xs" tone="muted">{item.options.map((option) => option.name).join(', ')}</Text> : null}
                 </View>
-                <Text size="sm" weight="600" tabular>{formatCurrency(item.unit_price * item.quantity)}</Text>
+                <Text size="sm" weight="600" tabular>{formatCurrency(lineTotal(index, item))}</Text>
               </View>
             ))}
           </View>
@@ -297,15 +330,19 @@ export default function CheckoutScreen() {
           <Field label="Catatan untuk kafe (opsional)" value={notes} onChangeText={setNotes} placeholder="Contoh: tolong pisah sedotan" multiline maxLength={1000} />
 
           <View style={styles.card}>
-            <SummaryRow label="Subtotal" value={formatCurrency(subtotal)} />
-            {voucherDiscount ? <SummaryRow label={`Voucher ${voucher.code}`} value={`−${formatCurrency(voucherDiscount)}`} tone={COLORS.primaryPressed} /> : null}
-            {pointsDiscount ? <SummaryRow label={`${pointsInfo.points} poin`} value={`−${formatCurrency(pointsDiscount)}`} tone={COLORS.primaryPressed} /> : null}
-            {charges.service ? <SummaryRow label={`Service ${charges.serviceRate}%`} value={formatCurrency(charges.service)} /> : null}
-            {charges.tax ? <SummaryRow label={`Pajak ${charges.taxRate}%${charges.taxInclusive ? ' (termasuk)' : ''}`} value={formatCurrency(charges.tax)} /> : null}
-            {charges.rounding ? <SummaryRow label="Pembulatan" value={formatCurrency(charges.rounding)} /> : null}
+            <Text weight="700">Rincian harga</Text>
+            {priceChanged ? <Text size="xs" weight="600" tone="danger">Harga beberapa menu sudah berubah. Rincian di bawah memakai harga terbaru.</Text> : null}
+            {quoteProblems.map((problem) => <Text key={`${problem.index}-${problem.message}`} size="xs" weight="600" tone="danger">{problem.message}</Text>)}
+            <SummaryRow label="Subtotal" value={formatCurrency(priced.subtotal)} />
+            {priced.voucher ? <SummaryRow label={`Voucher ${voucher?.code || ''}`} value={`−${formatCurrency(priced.voucher)}`} tone={COLORS.primaryPressed} /> : null}
+            {priced.points ? <SummaryRow label={`Tukar ${priced.pointsCount} poin`} value={`−${formatCurrency(priced.points)}`} tone={COLORS.primaryPressed} /> : null}
+            {priced.service ? <SummaryRow label={`Service ${priced.serviceRate}%`} value={formatCurrency(priced.service)} /> : null}
+            {priced.tax ? <SummaryRow label={`Pajak ${priced.taxRate}%${priced.taxInclusive ? ' (sudah termasuk harga)' : ''}`} value={formatCurrency(priced.tax)} /> : null}
+            {priced.rounding ? <SummaryRow label="Pembulatan" value={formatCurrency(priced.rounding)} /> : null}
             <View style={styles.divider} />
-            <SummaryRow label="Perkiraan total" value={formatCurrency(charges.total)} strong />
-            <Text size="xs" tone="muted">Total final dihitung kafe saat pesanan dibuat (harga, stok, voucher & poin dicek ulang).</Text>
+            <SummaryRow label={q ? 'Total bayar' : 'Perkiraan total'} value={quoteUpdating ? 'Menghitung…' : formatCurrency(priced.total)} strong />
+            {priced.voucher + priced.points > 0 ? <Text size="xs" weight="700" style={{ color: brand.colors.primaryPressed }}>Kamu hemat {formatCurrency(priced.voucher + priced.points)}</Text> : null}
+            <Text size="xs" tone="muted">{q ? 'Total ini sudah termasuk diskon, pajak, dan service — sama dengan yang ditagih kafe.' : 'Total final dihitung kafe saat pesanan dibuat (harga, stok, voucher & poin dicek ulang).'}</Text>
           </View>
 
           <Button
