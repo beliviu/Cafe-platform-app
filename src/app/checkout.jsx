@@ -132,12 +132,12 @@ export default function CheckoutScreen() {
   async function applyVoucher() {
     const code = voucherInput.trim().toUpperCase()
     if (!code) return
-    if (!session || isGuest) return setVoucherError('Masuk ke akun untuk memakai voucher.')
+    if (!guestMode && (!session || isGuest)) return setVoucherError('Masuk ke akun untuk memakai voucher.')
     setCheckingVoucher(true)
     setVoucherError('')
     const { data, error: rpcError } = await supabase.rpc('voucher_check', { p_cafe_id: cafeId, p_code: code, p_subtotal: subtotal })
     setCheckingVoucher(false)
-    if (rpcError) return setVoucherError(rpcError.message)
+    if (rpcError) return setVoucherError(guestMode && /permission denied/i.test(rpcError.message) ? 'Voucher ini khusus member. Masuk atau daftar dulu untuk memakainya.' : rpcError.message)
     if (!data.ok) return setVoucherError(data.message)
     setVoucher({ code, name: data.name, discount: Number(data.discount) })
     setVoucherInput('')
@@ -247,7 +247,7 @@ export default function CheckoutScreen() {
             </View>
           )}
 
-          {live && !guestMode && (
+          {live && (
             <View style={styles.section}>
               <Text weight="700">Voucher</Text>
               {voucher ? (

@@ -1,12 +1,24 @@
 import { useState } from 'react'
 import { Link, router } from 'expo-router'
-import { View } from 'react-native'
+import { Platform, View } from 'react-native'
 import { useAuth } from '../auth/useAuth.js'
 import { Button, ErrorBox, Field, Screen } from '../components/ui.jsx'
 import { Text } from '../components/ui/Text.jsx'
 import { BrandMark } from '../brand/BrandMark.jsx'
 import { useBrand } from '../brand/useBrand.js'
 import { makeStyles } from '../theme/useTheme.js'
+
+// Pesan Supabase Auth → bahasa yang dimengerti pelanggan
+function friendlySignupError(error) {
+  const message = error?.message || ''
+  if (error?.status === 429 || /rate limit/i.test(message)) {
+    return 'Pendaftaran sedang ramai. Coba lagi beberapa menit lagi, atau pesan sebagai tamu lewat QR meja.'
+  }
+  if (/already registered|already exists/i.test(message)) return 'Email ini sudah terdaftar. Silakan masuk.'
+  if (/invalid.*email|email.*invalid/i.test(message)) return 'Format email tidak valid.'
+  if (/password/i.test(message)) return 'Password terlalu lemah. Gunakan minimal 8 karakter.'
+  return `Pendaftaran gagal: ${message}`
+}
 
 export default function RegisterScreen() {
   const styles = useStyles()
@@ -38,10 +50,11 @@ export default function RegisterScreen() {
     const { data, error: authError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { full_name: name.trim() } },
+      // Link verifikasi kembali ke app pelanggan (alamat ini harus ada di Supabase → Auth → URL Configuration → Redirect URLs)
+      options: { data: { full_name: name.trim() }, ...(Platform.OS === 'web' ? { emailRedirectTo: `${window.location.origin}/login` } : {}) },
     })
     if (authError) {
-      setError(`Pendaftaran gagal: ${authError.message}`)
+      setError(friendlySignupError(authError))
     } else if (data.session) {
       router.replace('/(tabs)')
     } else {

@@ -18,8 +18,10 @@ export default function VouchersScreen() {
 
   const load = useCallback(async () => {
     if (!cafe || !supabase) return
-    const { data, error: queryError } = await supabase.from('vouchers')
-      .select('id, code, name, discount_type, discount_value, max_discount, min_subtotal, ends_at').eq('cafe_id', cafe.id).order('ends_at')
+    const columns = 'id, code, name, discount_type, discount_value, max_discount, min_subtotal, ends_at'
+    const list = (select) => supabase.from('vouchers').select(select).eq('cafe_id', cafe.id).order('ends_at')
+    let { data, error: queryError } = await list(`${columns}, audience`)
+    if (queryError && /audience/i.test(queryError.message)) ({ data, error: queryError } = await list(columns)) // sebelum SQL 20
     if (queryError) return setError(queryError.message)
     setVouchers(data || [])
     return undefined
@@ -45,7 +47,7 @@ export default function VouchersScreen() {
             <Text weight="700">{voucher.name}</Text>
             <Text size="xs" tone="muted">
               {[Number(voucher.min_subtotal) ? `Min. ${formatCurrency(voucher.min_subtotal)}` : null, voucher.max_discount ? `maks. ${formatCurrency(voucher.max_discount)}` : null,
-                voucher.ends_at ? `s.d. ${formatDateShort(voucher.ends_at)}` : null].filter(Boolean).join(' · ') || 'Tanpa minimal belanja'}
+                voucher.ends_at ? `s.d. ${formatDateShort(voucher.ends_at)}` : null, voucher.audience === 'all' ? 'Bisa tanpa login' : voucher.audience === 'members' ? 'Khusus member' : null].filter(Boolean).join(' · ') || 'Tanpa minimal belanja'}
             </Text>
             <View style={styles.code}><Text weight="800" tabular style={{ color: brand.colors.primaryPressed, letterSpacing: 1.2 }} selectable>{voucher.code}</Text></View>
           </View>
