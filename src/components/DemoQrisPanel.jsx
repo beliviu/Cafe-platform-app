@@ -88,7 +88,7 @@ const useStyles = makeStyles(({ COLORS }) => ({
   panel: { gap: 16, padding: 18, backgroundColor: COLORS.surface, borderWidth: 1, borderColor: COLORS.border, borderRadius: 20 },
   panelHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   eyebrow: { color: COLORS.accentText, fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
-  title: { marginTop: 2, color: COLORS.ink, fontFamily: 'Fraunces', fontSize: 24, fontWeight: '700' },
+  title: { marginTop: 2, color: COLORS.ink, fontFamily: 'PlusJakartaSans', fontSize: 24, fontWeight: '700' },
   status: { flexDirection: 'row', alignItems: 'center', gap: 7, maxWidth: '52%', paddingHorizontal: 10, paddingVertical: 7, backgroundColor: COLORS.sunken, borderRadius: 20 },
   statusDot: { width: 7, height: 7, backgroundColor: COLORS.accent, borderRadius: 4 },
   statusText: { color: COLORS.textSecondary, fontSize: 10, fontWeight: '700' },

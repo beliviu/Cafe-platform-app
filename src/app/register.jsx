@@ -83,7 +83,7 @@ export default function RegisterScreen() {
 const useStyles = makeStyles(({ COLORS }) => ({
   content: { flexGrow: 1, justifyContent: 'center', paddingTop: 25, paddingBottom: 35, gap: 15 },
   eyebrow: { marginTop: 9, color: COLORS.green, fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
-  title: { color: COLORS.ink, fontFamily: 'Fraunces', fontSize: 32, fontWeight: '700', lineHeight: 37 },
+  title: { color: COLORS.ink, fontFamily: 'PlusJakartaSans', fontSize: 32, fontWeight: '700', lineHeight: 37 },
   copy: { color: COLORS.muted, fontSize: 13, lineHeight: 20 },
   success: { padding: 12, color: COLORS.green, backgroundColor: COLORS.greenSoft, borderRadius: 12, fontSize: 13, lineHeight: 19 },
   bottom: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 4 },

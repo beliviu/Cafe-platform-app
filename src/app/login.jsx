@@ -57,7 +57,7 @@ export default function LoginScreen() {
 const useStyles = makeStyles(({ COLORS }) => ({
   content: { flexGrow: 1, justifyContent: 'center', paddingTop: 30, paddingBottom: 35, gap: 16 },
   eyebrow: { marginTop: 10, color: COLORS.green, fontSize: 9, fontWeight: '800', letterSpacing: 1.5 },
-  title: { color: COLORS.ink, fontFamily: 'Fraunces', fontSize: 34, fontWeight: '700', lineHeight: 39 },
+  title: { color: COLORS.ink, fontFamily: 'PlusJakartaSans', fontSize: 34, fontWeight: '700', lineHeight: 39 },
   copy: { marginBottom: 3, color: COLORS.muted, fontSize: 13, lineHeight: 20 },
   bottom: { flexDirection: 'row', justifyContent: 'center', gap: 5, marginTop: 6 },
   bottomText: { color: COLORS.muted, fontSize: 12 },

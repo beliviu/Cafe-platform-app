@@ -16,7 +16,7 @@ export default function CartScreen() {
       <TableBanner table={table} onClear={() => setTable(null)} />
       {!items.length ? (
         <EmptyState title="Keranjang masih kosong" description="Pilih minuman atau camilan dari menu kafe. Isi keranjang tetap tersimpan meski aplikasi ditutup."
-          action={<Button title="Jelajahi menu" onPress={() => router.push('/(tabs)/menu')} />} />
+          action={<Button title="Jelajahi menu" onPress={() => router.push('/menu')} />} />
       ) : (
         <>
           <View style={styles.cafeHeading}>

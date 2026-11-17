@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { router } from 'expo-router'
 import { Platform, Pressable, ScrollView, Switch, TextInput, View } from 'react-native'
 import { Banknote, QrCode, Ticket, X } from 'lucide-react-native'
@@ -42,11 +42,11 @@ export default function CheckoutScreen() {
   const { session, supabase, isGuest, signInGuest } = useAuth()
   const { cafe, brand } = useBrand()
   const { toast } = useToast()
-  const { items, cafeId, subtotal, clearCart, table, setTable } = useCart()
+  const { items, cafeId, subtotal, clearCart, table, setTable, orderType: preferredOrderType, voucherCode: pendingVoucher, setVoucherCode } = useCart()
   const { status, reload: reloadStatus } = useCafeStatus(cafe)
   const [settings, setSettings] = useState(null)
   const [loyalty, setLoyalty] = useState(null)
-  const [orderType, setOrderType] = useState('takeaway')
+  const [orderType, setOrderType] = useState(preferredOrderType || 'takeaway')
   const [when, setWhen] = useState('now')
   const [day, setDay] = useState(0)
   const [slot, setSlot] = useState(null)
@@ -73,7 +73,7 @@ export default function CheckoutScreen() {
       .then(({ data }) => {
         setSettings(data || null)
         const types = data?.order_types || []
-        if (types.length && !types.includes('takeaway')) setOrderType(types[0])
+        if (types.length) setOrderType((current) => (types.includes(current) ? current : types[0]))
       })
   }, [cafeId, supabase])
 
@@ -163,20 +163,38 @@ export default function CheckoutScreen() {
     return true
   }
 
-  async function applyVoucher() {
-    const code = voucherInput.trim().toUpperCase()
-    if (!code) return
-    if (!guestMode && (!session || isGuest)) return setVoucherError('Masuk ke akun untuk memakai voucher.')
+  const applyVoucherCode = useCallback(async (raw) => {
+    const code = String(raw || '').trim().toUpperCase()
+    if (!code) return undefined
+    if (!guestMode && (!session || isGuest)) {
+      setVoucherInput(code)
+      return setVoucherError('Masuk ke akun untuk memakai voucher.')
+    }
     setCheckingVoucher(true)
     setVoucherError('')
     const { data, error: rpcError } = await supabase.rpc('voucher_check', { p_cafe_id: cafeId, p_code: code, p_subtotal: subtotal })
     setCheckingVoucher(false)
+    if (rpcError || !data?.ok) setVoucherInput(code)
     if (rpcError) return setVoucherError(guestMode && /permission denied/i.test(rpcError.message) ? 'Voucher ini khusus member. Masuk atau daftar dulu untuk memakainya.' : rpcError.message)
     if (!data.ok) return setVoucherError(data.message)
     setVoucher({ code, name: data.name, discount: Number(data.discount) })
     setVoucherInput('')
     return undefined
+  }, [cafeId, guestMode, isGuest, session, subtotal, supabase])
+
+  function applyVoucher() {
+    return applyVoucherCode(voucherInput)
   }
+
+  // Voucher yang dipilih di tab Voucher / halaman pilih voucher: langsung dipakai
+  useEffect(() => {
+    if (!pendingVoucher || !supabase || !cafeId || !subtotal) return undefined
+    const timer = setTimeout(() => {
+      setVoucherCode(null)
+      applyVoucherCode(pendingVoucher)
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [applyVoucherCode, cafeId, pendingVoucher, setVoucherCode, subtotal, supabase])
 
   async function placeOrder() {
     setError('')

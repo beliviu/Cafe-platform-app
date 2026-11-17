@@ -37,6 +37,9 @@ export function CartProvider({ children }) {
   const [lines, setLines] = useState([])
   const [table, setTableState] = useState(null)
   const [restored, setRestored] = useState(false)
+  // Pilihan dari Beranda/Menu & tab Voucher, dipakai halaman checkout (tidak disimpan di perangkat)
+  const [orderType, setOrderType] = useState('takeaway')
+  const [voucherCode, setVoucherCode] = useState(null)
   const skipSave = useRef(true)
   const cafeId = lines[0]?.cafe_id || table?.cafe_id || null
 
@@ -115,7 +118,11 @@ export function CartProvider({ children }) {
     clearCart,
     replaceLines,
     setTable,
-  }), [addItem, cafeId, changeQuantity, clearCart, lines, removeItem, replaceLines, restored, setTable, table])
+    orderType: table ? 'dine_in' : orderType,
+    setOrderType,
+    voucherCode,
+    setVoucherCode,
+  }), [addItem, cafeId, changeQuantity, clearCart, lines, orderType, removeItem, replaceLines, restored, setTable, table, voucherCode])
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

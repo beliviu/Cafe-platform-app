@@ -1,58 +1,48 @@
-import { StyleSheet, View } from 'react-native'
+import { Text } from 'react-native'
 import { Tabs } from 'expo-router'
-import { Coffee, House, ReceiptText, UserRound } from 'lucide-react-native'
-import { useCart } from '../../cart/useCart.js'
-import { useBrand } from '../../brand/useBrand.js'
+import { House, ReceiptText, TicketPercent, UserRound } from 'lucide-react-native'
 import { FONTS } from '../../theme/tokens.js'
 import { useTheme } from '../../theme/useTheme.js'
 
-function TabIcon({ icon: Icon, focused }) {
-  const { COLORS, dark } = useTheme()
-  return (
-    <View style={[styles.iconPill, focused && { backgroundColor: COLORS.primarySoft }]}>
-      <Icon size={21} color={focused ? COLORS.primaryPressed : dark ? COLORS.navMuted : COLORS.textMuted} strokeWidth={focused ? 2.3 : 1.9} />
-    </View>
-  )
-}
+const TABS = [
+  { name: 'index', title: 'Beranda', icon: House },
+  { name: 'voucher', title: 'Voucher', icon: TicketPercent },
+  { name: 'orders', title: 'Pesanan', icon: ReceiptText },
+  { name: 'profile', title: 'Akun', icon: UserRound },
+]
 
 export default function TabLayout() {
-  const { COLORS, dark } = useTheme()
-  const { itemCount } = useCart()
-  const { brand } = useBrand()
+  const { COLORS } = useTheme()
+  const inactive = COLORS.textMuted
 
   return (
     <Tabs screenOptions={{
       headerShown: false,
-      headerStyle: { backgroundColor: COLORS.canvas },
-      headerTintColor: COLORS.text,
-      headerTitleStyle: { fontFamily: FONTS.sans, fontWeight: '700' },
-      headerShadowVisible: false,
-      sceneStyle: { backgroundColor: COLORS.canvas },
+      sceneStyle: { backgroundColor: COLORS.card },
       tabBarStyle: {
-        backgroundColor: dark ? COLORS.nav : COLORS.card, borderTopColor: dark ? COLORS.borderSubtle : COLORS.border,
-        borderTopLeftRadius: 22, borderTopRightRadius: 22, height: 70, paddingTop: 8, paddingBottom: 10,
+        backgroundColor: COLORS.card,
+        borderTopColor: COLORS.borderSubtle,
+        borderTopWidth: 1,
+        paddingTop: 8,
+        minHeight: 68,
+        elevation: 0,
       },
-      tabBarActiveTintColor: COLORS.primaryPressed,
-      tabBarInactiveTintColor: dark ? COLORS.navMuted : COLORS.textMuted,
-      tabBarLabelStyle: { fontFamily: FONTS.sans, fontSize: 11, fontWeight: '700' },
-      tabBarBadgeStyle: { backgroundColor: brand.colors.primary, color: COLORS.textOnPrimary, fontFamily: FONTS.sans, fontSize: 10, fontWeight: '700' },
+      tabBarActiveTintColor: COLORS.primary,
+      tabBarInactiveTintColor: inactive,
     }}>
-      <Tabs.Screen name="index" options={{ title: 'Beranda', tabBarIcon: ({ focused }) => <TabIcon icon={House} focused={focused} /> }} />
-      <Tabs.Screen
-        name="menu"
-        options={{
-          title: 'Menu',
-          tabBarIcon: ({ focused }) => <TabIcon icon={Coffee} focused={focused} />,
-          tabBarBadge: itemCount > 0 ? itemCount : undefined,
-          tabBarAccessibilityLabel: itemCount > 0 ? `Menu, ${itemCount} item di keranjang` : 'Menu',
-        }}
-      />
-      <Tabs.Screen name="orders" options={{ title: 'Pesanan', tabBarIcon: ({ focused }) => <TabIcon icon={ReceiptText} focused={focused} /> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profil', tabBarIcon: ({ focused }) => <TabIcon icon={UserRound} focused={focused} /> }} />
+      {TABS.map(({ name, title, icon: Icon }) => (
+        <Tabs.Screen
+          key={name}
+          name={name}
+          options={{
+            title,
+            tabBarIcon: ({ focused, color }) => <Icon size={26} color={color} strokeWidth={focused ? 2.3 : 1.7} />,
+            tabBarLabel: ({ focused, color }) => (
+              <Text style={{ color, fontFamily: FONTS.sans, fontSize: focused ? 13.5 : 12.5, fontWeight: focused ? '800' : '500', marginTop: 2 }}>{title}</Text>
+            ),
+          }}
+        />
+      ))}
     </Tabs>
   )
 }
-
-const styles = StyleSheet.create({
-  iconPill: { width: 54, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 15 },
-})

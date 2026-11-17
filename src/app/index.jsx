@@ -29,7 +29,7 @@ export default function AppIndex() {
 
 const useStyles = makeStyles(({ COLORS }) => ({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.background },
-  brand: { marginTop: 16, paddingHorizontal: 24, color: COLORS.ink, fontFamily: 'Fraunces', fontSize: 28, fontWeight: '700', letterSpacing: -0.5, textAlign: 'center' },
+  brand: { marginTop: 16, paddingHorizontal: 24, color: COLORS.ink, fontFamily: 'PlusJakartaSans', fontSize: 28, fontWeight: '700', letterSpacing: -0.5, textAlign: 'center' },
   tagline: { marginTop: 6, paddingHorizontal: 32, color: COLORS.textMuted, fontSize: 13, textAlign: 'center' },
   loading: { marginTop: 26 },
 }))

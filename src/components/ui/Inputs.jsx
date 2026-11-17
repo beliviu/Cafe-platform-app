@@ -74,7 +74,7 @@ export function SegmentedControl({ options, value, onChange, style }) {
             onPress={() => onChange(option.value)}
             style={[styles.segment, selected && styles.segmentSelected]}
           >
-            <Text weight={selected ? '700' : '600'} size="sm" style={{ color: selected ? COLORS.primaryPressed : COLORS.textSecondary }}>{option.label}</Text>
+            <Text weight={selected ? '800' : '600'} size="sm" style={{ color: selected ? COLORS.primaryPressed : COLORS.textMuted }}>{option.label}</Text>
             {option.count !== undefined ? (
               <View style={[styles.count, selected && styles.countSelected]}>
                 <Text size={11} weight="700" tabular style={{ color: selected ? COLORS.textOnPrimary : COLORS.textSecondary }}>{option.count}</Text>
@@ -122,12 +122,12 @@ const useStyles = makeStyles(({ COLORS }) => ({
   input: { minHeight: 50, paddingHorizontal: 14, color: COLORS.text, backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.borderStrong, borderRadius: RADIUS.md, fontFamily: FONTS.sans, fontSize: TYPE.base },
   inputError: { borderColor: '#D0705F' },
   multiline: { height: 96, paddingTop: 13, textAlignVertical: 'top' },
-  search: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48, paddingLeft: 14, backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.md },
+  search: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 50, paddingLeft: 18, backgroundColor: COLORS.field, borderWidth: 1.5, borderColor: COLORS.border, borderRadius: RADIUS.full },
   searchInput: { flex: 1, minHeight: 46, color: COLORS.text, fontFamily: FONTS.sans, fontSize: TYPE.base },
   searchClear: { width: TAP_TARGET, height: TAP_TARGET, alignItems: 'center', justifyContent: 'center' },
-  segmented: { flexDirection: 'row', padding: 4, gap: 4, backgroundColor: COLORS.sunken, borderRadius: RADIUS.md },
-  segment: { flex: 1, minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: RADIUS.sm },
-  segmentSelected: { backgroundColor: COLORS.card, shadowColor: '#31281E', shadowOpacity: 0.08, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 },
+  segmented: { flexDirection: 'row', padding: 4, gap: 4, backgroundColor: COLORS.card, borderWidth: 1, borderColor: COLORS.border, borderRadius: RADIUS.full },
+  segment: { flex: 1, minHeight: 42, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 8, borderWidth: 1.5, borderColor: 'transparent', borderRadius: RADIUS.full },
+  segmentSelected: { backgroundColor: COLORS.primarySoft, borderColor: COLORS.primary },
   count: { minWidth: 20, paddingHorizontal: 6, paddingVertical: 1, alignItems: 'center', backgroundColor: COLORS.canvas, borderRadius: 10 },
   countSelected: { backgroundColor: COLORS.primary },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 4, padding: 2, backgroundColor: COLORS.primaryTint, borderRadius: RADIUS.full },

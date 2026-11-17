@@ -13,6 +13,7 @@ function variantsFor({ COLORS, STATUS_TONES }) {
     primary: { bg: COLORS.primary, pressed: COLORS.primaryPressed, fg: COLORS.textOnPrimary, border: 'transparent' },
     secondary: { bg: COLORS.raised, pressed: COLORS.primaryTint, fg: COLORS.text, border: COLORS.border },
     ghost: { bg: 'transparent', pressed: COLORS.hover, fg: COLORS.textSecondary, border: 'transparent' },
+    outline: { bg: 'transparent', pressed: COLORS.primaryTint, fg: COLORS.primaryPressed, border: COLORS.primary },
     danger: { bg: COLORS.danger, pressed: COLORS.dangerPressed, fg: '#FFFFFF', border: 'transparent' },
     'danger-soft': { bg: STATUS_TONES.red.bg, pressed: COLORS.dangerSoftPressed, fg: STATUS_TONES.red.fg, border: 'transparent' },
   }
@@ -33,7 +34,7 @@ function useVariant(variant, fallback) {
 }
 
 /**
- * Tombol. variant: primary | secondary | ghost | danger | danger-soft
+ * Tombol pil. variant: primary | secondary | outline | ghost | danger | danger-soft
  * size: sm (40) | md (48) | lg (54). icon / iconRight = komponen ikon lucide.
  */
 export function Button({
@@ -78,7 +79,7 @@ export function Button({
       {loading ? <ActivityIndicator color={palette.fg} /> : (
         <View style={styles.content}>
           {Icon && <Icon size={size === 'sm' ? 16 : 18} color={palette.fg} strokeWidth={2.2} />}
-          {title ? <Text weight="700" size={size === 'sm' ? 'sm' : 'base'} style={{ color: palette.fg }}>{title}</Text> : null}
+          {title ? <Text weight="800" size={size === 'sm' ? 'base' : 'md'} style={{ color: palette.fg }}>{title}</Text> : null}
           {IconRight && <IconRight size={size === 'sm' ? 16 : 18} color={palette.fg} strokeWidth={2.2} />}
         </View>
       )}
@@ -118,16 +119,16 @@ export function IconButton({ icon: Icon, label, onPress, variant = 'secondary', 
 }
 
 const useStyles = makeStyles(({ COLORS }) => ({
-  button: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18, borderWidth: 1, borderRadius: RADIUS.md },
-  sm: { minHeight: 40, paddingHorizontal: 14, borderRadius: RADIUS.sm + 2 },
-  md: { minHeight: 48 },
-  lg: { minHeight: 54, borderRadius: RADIUS.lg },
+  button: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 22, borderWidth: 1.5, borderRadius: RADIUS.full },
+  sm: { minHeight: 42, paddingHorizontal: 18 },
+  md: { minHeight: 50 },
+  lg: { minHeight: 56 },
   block: { alignSelf: 'stretch' },
   content: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   disabled: { opacity: 0.5 },
   gradientHost: { overflow: 'hidden' },
   pressed: { transform: [{ scale: 0.98 }] },
-  iconButton: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: RADIUS.md },
+  iconButton: { alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderRadius: RADIUS.full },
   badge: {
     position: 'absolute', top: -6, right: -6, minWidth: 20, height: 20, paddingHorizontal: 5,
     alignItems: 'center', justifyContent: 'center', backgroundColor: COLORS.primary, borderRadius: 10,

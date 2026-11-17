@@ -35,7 +35,7 @@ export default function TableQrScreen() {
       if (!data.qr_enabled) return setProblem({ title: 'Pesan dari meja sedang dimatikan', description: 'Silakan pesan langsung di kasir.' })
       setTable({ token: String(token), label: data.label, area: data.area, cafe_id: data.cafe_id, cafe_name: data.cafe_name })
       toast({ tone: 'success', title: `Meja ${data.label}`, description: 'Pesananmu akan diantar ke meja ini.' })
-      router.replace('/(tabs)/menu')
+      router.replace('/menu')
       return undefined
     })
     return () => { active = false }
@@ -46,7 +46,7 @@ export default function TableQrScreen() {
     <Screen>
       <View style={styles.center}>
         <EmptyState icon={QrCode} title={problem.title} description={problem.description}
-          action={<Button title="Lihat menu" variant="secondary" onPress={() => router.replace('/(tabs)/menu')} />} />
+          action={<Button title="Lihat menu" variant="secondary" onPress={() => router.replace('/menu')} />} />
       </View>
     </Screen>
   )

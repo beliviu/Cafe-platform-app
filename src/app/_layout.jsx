@@ -53,11 +53,13 @@ function ThemedStack() {
       <Stack screenOptions={{
         headerStyle: { backgroundColor: COLORS.canvas },
         headerTintColor: COLORS.text,
-        headerTitleStyle: { fontFamily: FONTS.sans, fontWeight: '700', fontSize: 17 },
+        headerTitleStyle: { fontFamily: FONTS.sans, fontWeight: '800', fontSize: 18 },
+        headerTitleAlign: 'center',
         headerShadowVisible: false,
         contentStyle: { backgroundColor: COLORS.canvas },
       }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="menu" options={{ headerShown: false, title: 'Menu' }} />
         <Stack.Screen name="login" options={{ title: 'Masuk' }} />
         <Stack.Screen name="register" options={{ title: 'Buat akun' }} />
         <Stack.Screen name="product/[id]" options={{ title: 'Detail produk' }} />
@@ -72,7 +74,7 @@ function ThemedStack() {
         <Stack.Screen name="loyalty" options={{ title: 'Poin & member' }} />
         <Stack.Screen name="payments" options={{ title: 'Riwayat pembayaran' }} />
         <Stack.Screen name="wishlist" options={{ title: 'Wishlist' }} />
-        <Stack.Screen name="vouchers" options={{ title: 'Voucher' }} />
+        <Stack.Screen name="vouchers" options={{ title: 'Pilih voucher' }} />
         <Stack.Screen name="notifications" options={{ title: 'Notifikasi' }} />
         <Stack.Screen name="support/index" options={{ title: 'Bantuan' }} />
         <Stack.Screen name="support/new" options={{ title: 'Hubungi kafe' }} />

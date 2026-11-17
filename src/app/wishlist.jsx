@@ -42,7 +42,7 @@ export default function WishlistScreen() {
     <Screen>
       {!products.length ? (
         <EmptyState icon={Heart} title="Wishlist masih kosong" description="Ketuk ikon hati di halaman menu untuk menyimpan favoritmu."
-          action={<Button title="Lihat menu" onPress={() => router.push('/(tabs)/menu')} />} />
+          action={<Button title="Lihat menu" onPress={() => router.push('/menu')} />} />
       ) : (
         <View style={styles.grid}>{products.map((product) => <ProductCard key={product.id} product={product} cafe={cafe} />)}</View>
       )}
@@ -51,5 +51,5 @@ export default function WishlistScreen() {
 }
 
 const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 11 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 24 },
 })

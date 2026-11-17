@@ -43,7 +43,8 @@ export function AppText({ muted = false, ...props }) {
 
 const useStyles = makeStyles(({ COLORS }) => ({
   base: { color: COLORS.text, fontFamily: FONTS.sans, fontSize: TYPE.base },
-  serif: { fontFamily: FONTS.serif, letterSpacing: -0.3 },
+  // Gaya judul: sans tebal & rapat (prop `serif` dipertahankan agar layar lama tetap jalan)
+  serif: { fontFamily: FONTS.sans, fontWeight: '800', letterSpacing: -0.4 },
   heading: { color: COLORS.text },
   period: { color: COLORS.primary },
   tabular: { fontVariant: ['tabular-nums'] },
